@@ -7,6 +7,7 @@
 #
 
 from time import sleep
+import os
 
 class LCD:
     # commands
@@ -209,6 +210,12 @@ class LCD:
             else:
                 self.write4bits(ord(char),True)
     
+    def secondrowmessage(self, text):
+        print ("message: %s"%text)
+        self.write4bits(0xC0) # next line
+        for char in text:
+            self.write4bits(ord(char),True)
+           
     def destroy(self):
         #print ("clean up used_gpio")
         self.GPIO.cleanup(self.used_gpio)
@@ -216,22 +223,46 @@ class LCD:
 def loop():
     global lcd
     lcd = LCD()
+    lcd.begin(16,2)
+    lcd.clear()
+    lcd.message("first row message")
+    lcd.secondrowmessage("second row message")
     while True:
-        lcd.clear()
-        lcd.message(" LCD 1602 Test \n123456789ABCDEF")
-        sleep(2)
-        lcd.clear()
-        lcd.message("   SUNFOUNDER \nHello World ! :)")
-        sleep(2)
-        lcd.clear()
-        lcd.message("Welcom to --->\n  sunfounder.com")
-        sleep(2)
+        lcd.scrollDisplayLeft()
+        
+        sleep(.50)
+        # lcd.clear()
+        # lcd.message("   SUNFOUNDER \nHello World ! :)")
+        # sleep(2)
+        # lcd.clear()
+        # lcd.message("Welcome to --->\n  sunfounder.com")
+        # sleep(2)
+        # lcd.clear()
+        # lcd.message("This is fun!!\n Glad we can")
+        # sleep(2)
+        # lcd.clear()
+        # lcd.message("spend this time\n together")
+        # sleep(2)
+        
+        
+        
+def getIP():
+    global lcd
+    lcd = LCD()
+    lcd.clear()
+    ipStream = os.popen("ip addr show wlan0 | grep 'inet\\b' | awk '{print $2}' | cut -d/ -f1")
+    IPAddress = ipStream.read()
+    ssidStream = os.popen("iwgetid wlan0 -r")
+    SSID = ssidStream.read()
+    lcd.message("IP: " + IPAddress)
+    lcd.secondrowmessage("SSID: " + SSID)
 
 def destroy():
     lcd.destroy()
 
 if __name__ == '__main__':
     try:
-        loop()
+        #loop()
+        getIP()
     except KeyboardInterrupt:
         destroy()
